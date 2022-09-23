@@ -127,6 +127,9 @@ template<EOrder RGB_ORDER> class DMXSERIAL : public DMXSerialController<RGB_ORDE
 #endif
 #endif
 
+template<uint8_t DATA_PIN, EOrder RGB_ORDER> class WS2812_Minty : public WS2812Controller800Khz_Minty<DATA_PIN, RGB_ORDER> {};
+
+
 enum EBlockChipsets {
 #ifdef PORTA_FIRST_PIN
 	WS2811_PORTA,

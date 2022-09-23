@@ -612,6 +612,9 @@ class PL9823Controller : public ClocklessController<DATA_PIN, C_NS(350), C_NS(10
 #endif
 ///@}
 
+template <uint8_t DATA_PIN, EOrder RGB_ORDER = RGB>
+class WS2812Controller800Khz_Minty : public ClocklessController<DATA_PIN, C_NS(250), C_NS(625), C_NS(375), RGB_ORDER, 0, true> {};
+
 #endif
 ///@}
 FASTLED_NAMESPACE_END

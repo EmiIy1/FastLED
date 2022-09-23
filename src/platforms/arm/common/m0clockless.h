@@ -10,7 +10,7 @@ struct M0ClocklessData {
 };
 
 
-template<int HI_OFFSET, int LO_OFFSET, int T1, int T2, int T3, EOrder RGB_ORDER, int WAIT_TIME>int
+template<int HI_OFFSET, int LO_OFFSET, int T1, int T2, int T3, EOrder RGB_ORDER, int WAIT_TIME, bool INVERT = false>int
 showLedData(volatile uint32_t *_port, uint32_t _bitmask, const uint8_t *_leds, uint32_t num_leds, struct M0ClocklessData *pData) {
   // Lo register variables
   register uint32_t scratch=0;
@@ -79,9 +79,18 @@ showLedData(volatile uint32_t *_port, uint32_t _bitmask, const uint8_t *_leds, u
     "  .endm;"
 
     // check the bit and drop the line low if it isn't set
-    "  .macro qlo4 b,bitmask,port,loff	;"
+    "  .macro qlo4_bcs b,bitmask,port,loff	;"
     "    lsl \\b, #1			;"
     "    bcs skip_\\@			;"
+    "    str \\bitmask, [\\port, \\loff]	;"
+    "    skip_\\@:			;"
+    "    m0pad;"
+    "  .endm				;"
+
+    // check the bit and drop the line low if it is set
+    "  .macro qlo4_bcc b,bitmask,port,loff	;"
+    "    lsl \\b, #1			;"
+    "    bcc skip_\\@			;"
     "    str \\bitmask, [\\port, \\loff]	;"
     "    skip_\\@:			;"
     "    m0pad;"
@@ -190,8 +199,8 @@ showLedData(volatile uint32_t *_port, uint32_t _bitmask, const uint8_t *_leds, u
       [port] "l" (port),              \
       [base] "l" (base),              \
       [bitmask] "l" (bitmask),        \
-      [hi_off] "I" (HI_OFFSET),       \
-      [lo_off] "I" (LO_OFFSET),       \
+      [hi_off] "I" (INVERT ? LO_OFFSET : HI_OFFSET),       \
+      [lo_off] "I" (INVERT ? HI_OFFSET : LO_OFFSET),       \
       [led0] "I" (RO(0)),             \
       [led1] "I" (RO(1)),             \
       [led2] "I" (RO(2)),             \
@@ -203,7 +212,8 @@ showLedData(volatile uint32_t *_port, uint32_t _bitmask, const uint8_t *_leds, u
       [scale2] "I" (4*(2+RO(2))),         \
       [T1] "I" (T1),                  \
       [T2] "I" (T2),                  \
-      [T3] "I" (T3)                   \
+      [T3] "I" (T3),                  \
+      [qlo4] "s" (INVERT ? "qlo4_bcc" : "qlo4_bcs")             \
     :
 
     /////////////////////////////////////////////////////////////////////////
@@ -211,7 +221,7 @@ showLedData(volatile uint32_t *_port, uint32_t _bitmask, const uint8_t *_leds, u
 #define LOOP            "  loop_%=:"
 #define HI2             "  qset2 %[bitmask], %[port], %[hi_off];"
 #define _D1             "  mod_delay %c[T1],2,0,%[scratch];"
-#define QLO4            "  qlo4 %[b],%[bitmask],%[port], %[lo_off];"
+#define QLO4            "  %[qlo4] %[b],%[bitmask],%[port], %[lo_off];"
 #define LOADLEDS3(X)    "  loadleds3 %[leds], %[bn], %[led" #X "] ,%[scratch];"
 #define _D2(ADJ)        "  mod_delay %c[T2],4," #ADJ ",%[scratch];"
 #define LO2             "  qset2 %[bitmask], %[port], %[lo_off];"
