@@ -235,325 +235,165 @@ showLedData(volatile uint32_t *_port, uint32_t _bitmask, const uint8_t *_leds, u
 #define CMPLOOP5        "  cmploop5 %[counter], loop_%=;"
 #define NOTHING         ""
 
-  if (INVERT) {
 #if (defined(SEI_CHK) && (FASTLED_ALLOW_INTERRUPTS == 1))
-    // We're allowing interrupts and have hardware timer support defined -
-    // track the loop outside the asm code, to allow inserting the interrupt
-    // overrun checks.
-    asm __volatile__ (
-      // pre-load byte 0
-      LOADLEDS3(0) LOADDITHER7(0) DITHER5 SCALE4(0) ADJDITHER7(0) SWAPBBN1
-      M0_ASM_ARGS);
-
-    do {
-      asm __volatile__ (
-      // Write out byte 0, prepping byte 1
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADLEDS3(1)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADDITHER7(1)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SCALE4(1)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC ADJDITHER7(1)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SWAPBBN1        _D2(1) LO2 _D3(0)
-
-      // Write out byte 1, prepping byte 2
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADLEDS3(2)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADDITHER7(2)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SCALE4(2)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC ADJDITHER7(2)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SWAPBBN1        _D2(1) LO2 _D3(0)
-
-      // Write out byte 2, prepping byte 0
-      HI2 _D1 QLO4_BCC INCLEDS3        _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADLEDS3(0)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADDITHER7(0)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SCALE4(0)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC ADJDITHER7(0)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SWAPBBN1        _D2(1) LO2 _D3(5)
-
-      M0_ASM_ARGS
-      );
-      SEI_CHK; INNER_SEI; --counter; CLI_CHK;
-    } while(counter);
-#elif (FASTLED_ALLOW_INTERRUPTS == 1)
-    // We're allowing interrupts - track the loop outside the asm code, and
-    // re-enable interrupts in between each iteration.
-    asm __volatile__ (
-      // pre-load byte 0
-      LOADLEDS3(0) LOADDITHER7(0) DITHER5 SCALE4(0) ADJDITHER7(0) SWAPBBN1
-      M0_ASM_ARGS);
-
-    do {
-      asm __volatile__ (
-      // Write out byte 0, prepping byte 1
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADLEDS3(1)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADDITHER7(1)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SCALE4(1)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC ADJDITHER7(1)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SWAPBBN1        _D2(1) LO2 _D3(0)
-
-      // Write out byte 1, prepping byte 2
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADLEDS3(2)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADDITHER7(2)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SCALE4(2)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC ADJDITHER7(2)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC INCLEDS3        _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SWAPBBN1        _D2(1) LO2 _D3(0)
-
-      // Write out byte 2, prepping byte 0
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADLEDS3(0)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADDITHER7(0)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SCALE4(0)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC ADJDITHER7(0)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SWAPBBN1        _D2(1) LO2 _D3(5)
-
-      M0_ASM_ARGS
-      );
-
-      uint32_t ticksBeforeInterrupts = SysTick->VAL;
-      sei();
-      --counter;
-      cli();
-
-      // If more than 45 uSecs have elapsed, give up on this frame and start over.
-      // Note: this isn't completely correct. It's possible that more than one
-      // millisecond will elapse, and so SysTick->VAL will lap
-      // ticksBeforeInterrupts.
-      // Note: ticksBeforeInterrupts DECREASES
-      const uint32_t kTicksPerMs = VARIANT_MCK / 1000;
-      const uint32_t kTicksPerUs = kTicksPerMs / 1000;
-      const uint32_t kTicksIn45us = kTicksPerUs * 45;
-
-      const uint32_t currentTicks = SysTick->VAL;
-
-      if (ticksBeforeInterrupts < currentTicks) {
-        // Timer started over
-        if ((ticksBeforeInterrupts + (kTicksPerMs - currentTicks)) > kTicksIn45us) {
-          return 0;
-        }
-      } else {
-        if ((ticksBeforeInterrupts - currentTicks) > kTicksIn45us) {
-          return 0;
-        }
-      }
-    } while(counter);
-#else
-    // We're not allowing interrupts - run the entire loop in asm to keep things
-    // as tight as possible.  In an ideal world, we should be pushing out ws281x
-    // leds (or other 3-wire leds) with zero gaps between pixels.
-    asm __volatile__ (
-      // pre-load byte 0
+  // We're allowing interrupts and have hardware timer support defined -
+  // track the loop outside the asm code, to allow inserting the interrupt
+  // overrun checks.
+  asm __volatile__ (
+    // pre-load byte 0
     LOADLEDS3(0) LOADDITHER7(0) DITHER5 SCALE4(0) ADJDITHER7(0) SWAPBBN1
+    M0_ASM_ARGS);
 
-    // loop over writing out the data
-    LOOP
-      // Write out byte 0, prepping byte 1
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADLEDS3(1)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADDITHER7(1)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SCALE4(1)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC ADJDITHER7(1)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SWAPBBN1        _D2(1) LO2 _D3(0)
-
-      // Write out byte 1, prepping byte 2
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADLEDS3(2)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADDITHER7(2)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SCALE4(2)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC ADJDITHER7(2)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC INCLEDS3        _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SWAPBBN1        _D2(1) LO2 _D3(0)
-
-      // Write out byte 2, prepping byte 0
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADLEDS3(0)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC LOADDITHER7(0)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SCALE4(0)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC ADJDITHER7(0)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCC SWAPBBN1        _D2(1) LO2 _D3(5) CMPLOOP5
-
-      M0_ASM_ARGS
-    );
-#endif
-  } else {
-#if (defined(SEI_CHK) && (FASTLED_ALLOW_INTERRUPTS == 1))
-    // We're allowing interrupts and have hardware timer support defined -
-    // track the loop outside the asm code, to allow inserting the interrupt
-    // overrun checks.
+  do {
     asm __volatile__ (
-      // pre-load byte 0
-      LOADLEDS3(0) LOADDITHER7(0) DITHER5 SCALE4(0) ADJDITHER7(0) SWAPBBN1
-      M0_ASM_ARGS);
+    // Write out byte 0, prepping byte 1
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADLEDS3(1)    _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADDITHER7(1)  _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SCALE4(1)       _D2(4) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS ADJDITHER7(1)   _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
 
-    do {
-      asm __volatile__ (
-      // Write out byte 0, prepping byte 1
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADLEDS3(1)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADDITHER7(1)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SCALE4(1)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS ADJDITHER7(1)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
+    // Write out byte 1, prepping byte 2
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADLEDS3(2)    _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADDITHER7(2)  _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SCALE4(2)       _D2(4) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS ADJDITHER7(2)   _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
 
-      // Write out byte 1, prepping byte 2
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADLEDS3(2)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADDITHER7(2)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SCALE4(2)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS ADJDITHER7(2)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
+    // Write out byte 2, prepping byte 0
+    HI2 _D1 QLO4_BCS INCLEDS3        _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADLEDS3(0)    _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADDITHER7(0)  _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SCALE4(0)       _D2(4) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS ADJDITHER7(0)   _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(5)
 
-      // Write out byte 2, prepping byte 0
-      HI2 _D1 QLO4_BCS INCLEDS3        _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADLEDS3(0)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADDITHER7(0)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SCALE4(0)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS ADJDITHER7(0)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(5)
-
-      M0_ASM_ARGS
-      );
-      SEI_CHK; INNER_SEI; --counter; CLI_CHK;
-    } while(counter);
+    M0_ASM_ARGS
+    );
+    SEI_CHK; INNER_SEI; --counter; CLI_CHK;
+  } while(counter);
 #elif (FASTLED_ALLOW_INTERRUPTS == 1)
-    // We're allowing interrupts - track the loop outside the asm code, and
-    // re-enable interrupts in between each iteration.
-    asm __volatile__ (
-      // pre-load byte 0
-      LOADLEDS3(0) LOADDITHER7(0) DITHER5 SCALE4(0) ADJDITHER7(0) SWAPBBN1
-      M0_ASM_ARGS);
-
-    do {
-      asm __volatile__ (
-      // Write out byte 0, prepping byte 1
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADLEDS3(1)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADDITHER7(1)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SCALE4(1)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS ADJDITHER7(1)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
-
-      // Write out byte 1, prepping byte 2
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADLEDS3(2)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADDITHER7(2)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SCALE4(2)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS ADJDITHER7(2)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS INCLEDS3        _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
-
-      // Write out byte 2, prepping byte 0
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADLEDS3(0)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADDITHER7(0)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SCALE4(0)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS ADJDITHER7(0)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(5)
-
-      M0_ASM_ARGS
-      );
-
-      uint32_t ticksBeforeInterrupts = SysTick->VAL;
-      sei();
-      --counter;
-      cli();
-
-      // If more than 45 uSecs have elapsed, give up on this frame and start over.
-      // Note: this isn't completely correct. It's possible that more than one
-      // millisecond will elapse, and so SysTick->VAL will lap
-      // ticksBeforeInterrupts.
-      // Note: ticksBeforeInterrupts DECREASES
-      const uint32_t kTicksPerMs = VARIANT_MCK / 1000;
-      const uint32_t kTicksPerUs = kTicksPerMs / 1000;
-      const uint32_t kTicksIn45us = kTicksPerUs * 45;
-
-      const uint32_t currentTicks = SysTick->VAL;
-
-      if (ticksBeforeInterrupts < currentTicks) {
-        // Timer started over
-        if ((ticksBeforeInterrupts + (kTicksPerMs - currentTicks)) > kTicksIn45us) {
-          return 0;
-        }
-      } else {
-        if ((ticksBeforeInterrupts - currentTicks) > kTicksIn45us) {
-          return 0;
-        }
-      }
-    } while(counter);
-#else
-    // We're not allowing interrupts - run the entire loop in asm to keep things
-    // as tight as possible.  In an ideal world, we should be pushing out ws281x
-    // leds (or other 3-wire leds) with zero gaps between pixels.
-    asm __volatile__ (
-      // pre-load byte 0
+  // We're allowing interrupts - track the loop outside the asm code, and
+  // re-enable interrupts in between each iteration.
+  asm __volatile__ (
+    // pre-load byte 0
     LOADLEDS3(0) LOADDITHER7(0) DITHER5 SCALE4(0) ADJDITHER7(0) SWAPBBN1
+    M0_ASM_ARGS);
 
-    // loop over writing out the data
-    LOOP
-      // Write out byte 0, prepping byte 1
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADLEDS3(1)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADDITHER7(1)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SCALE4(1)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS ADJDITHER7(1)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
+  do {
+    asm __volatile__ (
+    // Write out byte 0, prepping byte 1
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADLEDS3(1)    _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADDITHER7(1)  _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SCALE4(1)       _D2(4) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS ADJDITHER7(1)   _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
 
-      // Write out byte 1, prepping byte 2
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADLEDS3(2)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADDITHER7(2)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SCALE4(2)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS ADJDITHER7(2)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS INCLEDS3        _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
+    // Write out byte 1, prepping byte 2
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADLEDS3(2)    _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADDITHER7(2)  _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SCALE4(2)       _D2(4) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS ADJDITHER7(2)   _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS INCLEDS3        _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
 
-      // Write out byte 2, prepping byte 0
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADLEDS3(0)    _D2(3) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS LOADDITHER7(0)  _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SCALE4(0)       _D2(4) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS ADJDITHER7(0)   _D2(7) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
-      HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(5) CMPLOOP5
+    // Write out byte 2, prepping byte 0
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADLEDS3(0)    _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADDITHER7(0)  _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SCALE4(0)       _D2(4) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS ADJDITHER7(0)   _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(5)
 
-      M0_ASM_ARGS
+    M0_ASM_ARGS
     );
+
+    uint32_t ticksBeforeInterrupts = SysTick->VAL;
+    sei();
+    --counter;
+    cli();
+
+    // If more than 45 uSecs have elapsed, give up on this frame and start over.
+    // Note: this isn't completely correct. It's possible that more than one
+    // millisecond will elapse, and so SysTick->VAL will lap
+    // ticksBeforeInterrupts.
+    // Note: ticksBeforeInterrupts DECREASES
+    const uint32_t kTicksPerMs = VARIANT_MCK / 1000;
+    const uint32_t kTicksPerUs = kTicksPerMs / 1000;
+    const uint32_t kTicksIn45us = kTicksPerUs * 45;
+
+    const uint32_t currentTicks = SysTick->VAL;
+
+    if (ticksBeforeInterrupts < currentTicks) {
+      // Timer started over
+      if ((ticksBeforeInterrupts + (kTicksPerMs - currentTicks)) > kTicksIn45us) {
+        return 0;
+      }
+    } else {
+      if ((ticksBeforeInterrupts - currentTicks) > kTicksIn45us) {
+        return 0;
+      }
+    }
+  } while(counter);
+#else
+  // We're not allowing interrupts - run the entire loop in asm to keep things
+  // as tight as possible.  In an ideal world, we should be pushing out ws281x
+  // leds (or other 3-wire leds) with zero gaps between pixels.
+  asm __volatile__ (
+    // pre-load byte 0
+  LOADLEDS3(0) LOADDITHER7(0) DITHER5 SCALE4(0) ADJDITHER7(0) SWAPBBN1
+
+  // loop over writing out the data
+  LOOP
+    // Write out byte 0, prepping byte 1
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADLEDS3(1)    _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADDITHER7(1)  _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SCALE4(1)       _D2(4) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS ADJDITHER7(1)   _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
+
+    // Write out byte 1, prepping byte 2
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADLEDS3(2)    _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADDITHER7(2)  _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SCALE4(2)       _D2(4) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS ADJDITHER7(2)   _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS INCLEDS3        _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(0)
+
+    // Write out byte 2, prepping byte 0
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADLEDS3(0)    _D2(3) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS LOADDITHER7(0)  _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS DITHER5         _D2(5) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SCALE4(0)       _D2(4) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS ADJDITHER7(0)   _D2(7) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS NOTHING         _D2(0) LO2 _D3(0)
+    HI2 _D1 QLO4_BCS SWAPBBN1        _D2(1) LO2 _D3(5) CMPLOOP5
+
+    M0_ASM_ARGS
+  );
 #endif
-  }
+
   return num_leds;
 }
 
